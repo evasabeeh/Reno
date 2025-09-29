@@ -8,7 +8,12 @@ const dbConfig = {
   port: parseInt(process.env.DB_PORT || '5432'),
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000, 
+  connectionTimeoutMillis: 2000,
+  
+  // Add SSL support for Supabase
+  ssl: process.env.DB_HOST?.includes('supabase.co') ? {
+    rejectUnauthorized: false
+  } : false,
 };
 
 const pool = new Pool(dbConfig);

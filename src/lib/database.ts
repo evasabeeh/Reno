@@ -1,17 +1,38 @@
 import { Pool } from 'pg';
 
-const dbConfig = {
-  connectionString: process.env.DATABASE_URL,
+// Parse DATABASE_URL to individual components to avoid IPv6 issues
+const parseDatabaseUrl = (url: string) => {
+  if (!url) return null;
+  const parsed = new URL(url);
+  return {
+    user: parsed.username,
+    password: parsed.password,
+    host: parsed.hostname,
+    port: parseInt(parsed.port) || 5432,
+    database: parsed.pathname.slice(1), // Remove leading slash
+  };
+};
+
+const dbParams = parseDatabaseUrl(process.env.DATABASE_URL || '');
+
+const dbConfig = dbParams ? {
+  user: dbParams.user,
+  password: dbParams.password,
+  host: dbParams.host,
+  port: dbParams.port,
+  database: dbParams.database,
   ssl: {
     rejectUnauthorized: false
   },
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  // Force IPv4 to avoid IPv6 connectivity issues
-  host: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : undefined,
-
-  options: '--search_path=public',
+} : {
+  // Fallback for missing DATABASE_URL
+  ssl: false,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 };
 
 const pool = new Pool(dbConfig);

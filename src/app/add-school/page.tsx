@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { SchoolFormData } from '@/types/school';
 import { showToast } from '@/lib/toast';
 
@@ -254,10 +255,13 @@ export default function AddSchoolPage() {
                 {imagePreview ? (
                   <div className="border-2 border-primary rounded-lg p-4 bg-secondary-light/30">
                     <div className="relative">
-                      <img 
+                      <Image 
                         src={imagePreview} 
                         alt="School preview" 
+                        width={800}
+                        height={192}
                         className="w-full h-48 object-cover rounded-lg"
+                        unoptimized={true}
                       />
                       <div className="absolute top-2 right-2 flex gap-2">
                         <button

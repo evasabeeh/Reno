@@ -7,7 +7,11 @@ const dbConfig = {
   },
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
+  // Force IPv4 to avoid IPv6 connectivity issues
+  host: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : undefined,
+
+  options: '--search_path=public',
 };
 
 const pool = new Pool(dbConfig);

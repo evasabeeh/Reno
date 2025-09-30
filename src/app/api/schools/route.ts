@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/database';
 import { saveUploadedFile, validateFileType, validateFileSize } from '@/lib/fileUpload';
+import { verifyToken } from '@/lib/auth';
 import { School } from '@/types/school';
 
 export async function GET() {
   try {
     const client = await pool.connect();
-    const result = await client.query(
-      'SELECT * FROM schools ORDER BY created_at DESC'
-    );
+    const result = await client.query(`
+      SELECT 
+        s.*,
+        u.email as created_by_email
+      FROM schools s
+      LEFT JOIN app_users u ON s.created_by = u.id
+      ORDER BY s.created_at DESC
+    `);
     client.release();
 
     return NextResponse.json({
@@ -26,6 +32,26 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const token = request.cookies.get('auth-token')?.value;
+    
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    let userId: number;
+    try {
+      const payload = await verifyToken(token);
+      userId = payload.userId;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Invalid authentication token' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     
     const name = formData.get('name') as string;
@@ -90,8 +116,8 @@ export async function POST(request: NextRequest) {
     const client = await pool.connect();
     try {
       const result = await client.query(
-        'INSERT INTO schools (name, address, city, state, contact, email_id, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [name, address, city, state, contactNumber, email_id, imagePath]
+        'INSERT INTO schools (name, address, city, state, contact, email_id, image, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [name, address, city, state, contactNumber, email_id, imagePath, userId]
       );
       
       client.release();

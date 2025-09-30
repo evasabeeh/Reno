@@ -5,11 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { School } from '@/types/school';
 import { showToast } from '@/lib/toast';
+import Navigation from '@/components/Navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SchoolsPage() {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchSchools();
@@ -17,7 +20,8 @@ export default function SchoolsPage() {
 
   const fetchSchools = async () => {
     try {
-      const response = await fetch('/api/schools');
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const response = await fetch(`${API_BASE_URL}/api/schools`);
       const result = await response.json();
 
       if (result.success) {
@@ -63,7 +67,7 @@ export default function SchoolsPage() {
                   fetchSchools(),
                   {
                     loading: 'Retrying to load schools...',
-                    success: 'Schools loaded successfully! 🎉',
+                    success: 'Schools loaded successfully! ??',
                     error: 'Failed to load schools',
                   }
                 );
@@ -79,23 +83,27 @@ export default function SchoolsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-light py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-secondary-light">
+      <Navigation />
+      <div className="py-8">
+        <div className="container mx-auto px-4">
 
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold text-primary mb-2">Schools Directory</h1>
             <p className="text-gray-600">Discover and explore schools in your area</p>
           </div>
-          <Link
-            href="/add-school"
-            className="mt-4 md:mt-0 btn-primary flex items-center gap-2 py-3 px-6"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add New School
-          </Link>
+          {user && (
+            <Link
+              href="/add-school"
+              className="mt-4 md:mt-0 btn-primary flex items-center gap-2 py-3 px-6"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add New School
+            </Link>
+          )}
         </div>
 
         <div className="mb-8">
@@ -113,16 +121,33 @@ export default function SchoolsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               <h3 className="text-xl font-semibold text-gray-600 mb-2">No Schools Found</h3>
-              <p className="text-gray-500 mb-6">Be the first to add a school to the directory!</p>
-              <Link
-                href="/add-school"
-                className="btn-primary inline-flex items-center gap-2 py-3 px-6"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add First School
-              </Link>
+              {user ? (
+                <>
+                  <p className="text-gray-500 mb-6">Be the first to add a school to the directory!</p>
+                  <Link
+                    href="/add-school"
+                    className="btn-primary inline-flex items-center gap-2 py-3 px-6"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add First School
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-500 mb-6">Sign up to add schools to the directory!</p>
+                  <Link
+                    href="/signup"
+                    className="btn-primary inline-flex items-center gap-2 py-3 px-6"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         ) : (
@@ -136,7 +161,7 @@ export default function SchoolsPage() {
                 <div className="relative h-48 bg-gray-200 overflow-hidden">
                   {school.image ? (
                     <Image
-                      src={`/schoolImages/${school.image}`}
+                      src={school.image}
                       alt={school.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -173,29 +198,41 @@ export default function SchoolsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span className="text-sm font-medium text-gray-700">{school.contact}</span>
+                  <div className="pt-3 border-t border-gray-100 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">{school.contact}</span>
+                      </div>
+                      
+                      <a
+                        href={`mailto:${school.email_id}`}
+                        className="inline-flex items-center gap-1 text-primary hover:text-primary-dark text-sm font-medium transition-colors duration-200"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Contact
+                      </a>
                     </div>
                     
-                    <a
-                      href={`mailto:${school.email_id}`}
-                      className="inline-flex items-center gap-1 text-primary hover:text-primary-dark text-sm font-medium transition-colors duration-200"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      Contact
-                    </a>
+                    {school.created_by_email && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-xs text-gray-500">Added by {school.created_by_email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

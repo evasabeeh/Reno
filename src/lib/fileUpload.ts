@@ -1,22 +1,57 @@
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function saveUploadedFile(file: File): Promise<string> {
   try {
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      throw new Error('Cloudinary configuration is missing');
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExtension}`;
-    const filePath = join(process.cwd(), 'public/schoolImages', fileName);
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: "image",
+          folder: "school-images",
+          transformation: [
+            { width: 1000, height: 1000, crop: "limit" },
+            { quality: "auto" },
+            { format: "auto" }
+          ],
+          public_id: `school_${Date.now()}`,
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            reject(error);
+          } else if (result) {
+            resolve(result);
+          } else {
+            reject(new Error('No result from Cloudinary'));
+          }
+        }
+      ).end(buffer);
+    });
 
-    await writeFile(filePath, buffer);
+    const cloudinaryResult = result as { secure_url: string };
+    if (!cloudinaryResult.secure_url) {
+      throw new Error('No secure URL returned from Cloudinary');
+    }
     
-    return fileName;
+    return cloudinaryResult.secure_url;
   } catch (error) {
-    console.error('Error saving file:', error);
-    throw new Error('Failed to save file');
+    console.error('Error uploading to Cloudinary:', error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to upload image: ${error.message}`);
+    }
+    throw new Error('Failed to upload image');
   }
 }
 

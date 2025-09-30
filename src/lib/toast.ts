@@ -70,7 +70,7 @@ export const showToast = {
   dismiss: (toastId?: string) => toast.dismiss(toastId),
 
   schoolAdded: () =>
-    toast.success('🎉 School added successfully!', {
+    toast.success('?? School added successfully!', {
       ...successOptions,
       duration: 3000,
     }),
@@ -88,7 +88,7 @@ export const showToast = {
     }),
 
   validationError: (message: string) =>
-    toast.error(`⚠️ ${message}`, {
+    toast.error(`?? ${message}`, {
       ...errorOptions,
       duration: 4000,
     }),

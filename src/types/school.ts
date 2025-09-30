@@ -7,6 +7,8 @@ export interface School {
   contact: number;
   image?: string;
   email_id: string;
+  created_by?: number;
+  created_by_email?: string;
   created_at?: string;
   updated_at?: string;
 }

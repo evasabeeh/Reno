@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/authClient';
+import { login as loginAPI } from '@/lib/authClient';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login, refreshUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +34,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await loginAPI(email, password);
       
       if (result.success) {
         toast.success(result.message);
+        
+        if (result.user) {
+          login(result.user);
+        } else {
+          await refreshUser();
+        }
+        
         router.push('/schools');
-        router.refresh();
       } else {
         toast.error(result.message);
       }

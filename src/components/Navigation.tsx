@@ -40,12 +40,6 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-8">
-            <button
-              onClick={() => router.push('/')}
-              className="text-xl font-bold text-primary hover:text-primary-dark transition-colors"
-            >
-              SchoolConnect
-            </button>
             
             <div className="hidden md:flex items-center space-x-6">
               <button
@@ -98,25 +92,6 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Mobile menu */}
-        <div className="md:hidden border-t border-gray-200 pt-4 pb-3">
-          <div className="flex flex-col space-y-1">
-            <button
-              onClick={() => router.push('/schools')}
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium transition-colors text-left"
-            >
-              Schools
-            </button>
-            
-            {user && (
-              <button
-                onClick={() => router.push('/add-school')}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium transition-colors text-left"
-              >
-                Add School
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </nav>
